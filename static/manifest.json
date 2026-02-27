@@ -1,0 +1,26 @@
+{
+    "name": "FeirasWallet",
+    "short_name": "FeirasWallet",
+    "description": "Wallet de autorizações para Feiras do Agricultor",
+    "start_url": "/wallet/",
+    "display": "standalone",
+    "background_color": "#1B5E20",
+    "theme_color": "#2E7D32",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/static/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/static/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["productivity", "utilities"],
+    "lang": "pt-BR"
+}
