@@ -12,7 +12,7 @@ Usage:
 import base64
 import os
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, redirect
 from flask_cors import CORS
 
 from config import config
@@ -71,6 +71,14 @@ def create_app() -> Flask:
     app.register_blueprint(verifier_bp)
     app.register_blueprint(api_bp)
 
+    @app.route('/')
+    def index():
+        return redirect('/admin/')
+
+    @app.route('/admin')
+    def admin_redirect():
+        return redirect('/admin/')
+
     @app.route('/health')
     def health():
         return jsonify({
@@ -80,7 +88,7 @@ def create_app() -> Flask:
 
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({"error": "Not found"}), 404
+        return redirect('/admin/')
 
     @app.errorhandler(500)
     def internal_error(error):
