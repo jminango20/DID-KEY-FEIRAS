@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificador de Acesso - FeirasWallet</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        header { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; padding: 32px 40px 24px; text-align: center; }
+        header h1 { font-size: 1.8em; margin-bottom: 8px; }
+        header p { opacity: 0.85; font-size: 0.9em; }
+        main { padding: 32px 40px; }
+        .input-section h2 { color: #333; margin-bottom: 8px; font-size: 1.1em; }
+        .input-section p { color: #666; margin-bottom: 20px; font-size: 0.9em; }
+        textarea { width: 100%; min-height: 160px; padding: 16px; border: 2px solid #e0e0e0; border-radius: 10px; font-family: 'Courier New', monospace; font-size: 13px; resize: vertical; margin-bottom: 16px; transition: border-color 0.2s; }
+        textarea:focus { outline: none; border-color: #2E7D32; }
+        .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; border: none; border-radius: 10px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46,125,50,0.4); }
+        .btn-scan { width: 100%; padding: 12px; margin-bottom: 12px; background: #E8F5E9; color: #2E7D32; border: 2px solid #2E7D32; border-radius: 10px; font-size: 0.95em; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-scan:hover { background: #2E7D32; color: white; }
+        #qr-reader-container { display: none; margin-bottom: 16px; border-radius: 10px; overflow: hidden; border: 2px solid #2E7D32; }
+        #qr-stop-btn { display: none; width: 100%; padding: 10px; margin-bottom: 12px; background: #f8d7da; color: #721c24; border: none; border-radius: 8px; font-size: 0.9em; cursor: pointer; }
+        #results { margin-top: 24px; display: none; }
+        .status-banner { padding: 24px; border-radius: 12px; text-align: center; margin-bottom: 24px; }
+        .status-banner.valid { background: #d4edda; border: 2px solid #28a745; color: #155724; }
+        .status-banner.invalid { background: #f8d7da; border: 2px solid #dc3545; color: #721c24; }
+        .status-banner.expired { background: #fff3cd; border: 2px solid #ffc107; color: #856404; }
+        .status-banner.error { background: #fff3cd; border: 2px solid #ffc107; color: #856404; }
+        .status-banner h2 { font-size: 1.6em; margin-bottom: 4px; }
+        .status-banner p { font-size: 0.9em; opacity: 0.85; }
+        .detail-card { background: #f9f9f9; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+        .detail-card h3 { font-size: 0.8em; text-transform: uppercase; color: #999; letter-spacing: 0.5px; margin-bottom: 16px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ececec; font-size: 0.9em; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: #888; }
+        .detail-value { color: #333; font-weight: 600; text-align: right; max-width: 65%; word-break: break-all; }
+        .products-chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+        .chip { background: #E8F5E9; color: #2E7D32; padding: 3px 10px; border-radius: 12px; font-size: 0.78em; font-weight: 600; }
+        .stall-big { font-size: 2.5em; font-weight: 700; color: #2E7D32; text-align: center; padding: 16px; background: #E8F5E9; border-radius: 10px; margin-bottom: 16px; }
+        footer { background: #f9f9f9; padding: 16px 40px; text-align: center; color: #aaa; font-size: 0.8em; border-top: 1px solid #efefef; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Verificador de Acesso</h1>
+            <p>Portão da Feira — verifica autorizações offline</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <h2>Verificar autorização de banca</h2>
+                <p>Escaneie o QR code do agricultor ou cole o JSON da credencial.</p>
+
+                <button class="btn-scan" onclick="startQrScanner()">📷 Escanear QR code</button>
+                <div id="qr-reader-container"><div id="qr-reader"></div></div>
+                <button id="qr-stop-btn" onclick="stopQrScanner()">✕ Cancelar</button>
+
+                <textarea id="credentialInput" placeholder='Cole o JSON da credencial aqui...'></textarea>
+                <button class="btn-primary" onclick="runVerification()">🔐 Verificar Acesso</button>
+            </div>
+
+            <div id="results"></div>
+        </main>
+
+        <footer>
+            Verificação via DID:KEY · W3C Verifiable Credentials · FeirasWallet
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="/static/js/verifier.js"></script>
+    <script>
+        // Auto-verify if ?claim=CLAIM_ID in URL
+        (function () {
+            const claimId = new URLSearchParams(window.location.search).get('claim');
+            if (claimId) verifyByClaim(claimId);
+        })();
+
+        let html5QrCode = null;
+
+        async function startQrScanner() {
+            const container = document.getElementById('qr-reader-container');
+            const stopBtn = document.getElementById('qr-stop-btn');
+            container.style.display = 'block';
+            stopBtn.style.display = 'block';
+
+            html5QrCode = new Html5Qrcode('qr-reader');
+            try {
+                await html5QrCode.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 280, height: 280 } },
+                    (decodedText) => {
+                        stopQrScanner();
+                        try {
+                            const url = new URL(decodedText);
+                            const claimId = url.searchParams.get('claim');
+                            if (claimId) { verifyByClaim(claimId); return; }
+                        } catch (_) {}
+                        document.getElementById('credentialInput').value = decodedText;
+                        runVerification();
+                    },
+                    (_) => {}
+                );
+            } catch (err) {
+                stopQrScanner();
+                alert('Não foi possível acessar a câmera: ' + err);
+            }
+        }
+
+        async function stopQrScanner() {
+            if (html5QrCode) {
+                try { await html5QrCode.stop(); } catch (_) {}
+                html5QrCode = null;
+            }
+            document.getElementById('qr-reader-container').style.display = 'none';
+            document.getElementById('qr-stop-btn').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

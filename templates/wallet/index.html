@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Wallet - FeirasWallet</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; }
+        header { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; padding: 24px 20px 16px; }
+        header h1 { font-size: 1.5em; margin-bottom: 4px; }
+        header p { opacity: 0.85; font-size: 0.9em; }
+        nav { background: white; display: flex; border-bottom: 1px solid #e0e0e0; padding: 0 16px; }
+        nav a { padding: 14px 16px; text-decoration: none; color: #666; font-size: 0.9em; border-bottom: 2px solid transparent; }
+        nav a.active { color: #2E7D32; border-bottom-color: #2E7D32; font-weight: 600; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
+        #empty-state { text-align: center; padding: 60px 20px; color: #999; }
+        #empty-state .icon { font-size: 4em; margin-bottom: 16px; }
+        #empty-state h2 { color: #555; margin-bottom: 8px; }
+        #empty-state p { margin-bottom: 24px; font-size: 0.95em; }
+        .credential-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .credential-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+        .credential-icon { font-size: 2em; }
+        .credential-header h3 { font-size: 1em; color: #333; margin-bottom: 2px; }
+        .credential-meta { color: #888; font-size: 0.85em; }
+        .credential-details { display: flex; gap: 12px; font-size: 0.85em; color: #666; margin-bottom: 16px; flex-wrap: wrap; }
+        .credential-actions { display: flex; gap: 10px; }
+        .btn-view { padding: 8px 16px; background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; border: none; border-radius: 6px; font-size: 0.85em; cursor: pointer; font-weight: 600; flex: 1; }
+        .btn-delete { padding: 8px 16px; background: #f8f8f8; color: #999; border: none; border-radius: 6px; font-size: 0.85em; cursor: pointer; font-weight: 600; }
+        .btn-delete:hover { background: #fde8e8; color: #c0392b; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-right: 6px; }
+        .badge-valid { background: #d4edda; color: #155724; }
+        .badge-expired { background: #f8d7da; color: #721c24; }
+        .credential-badges { padding: 8px 0; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌾 Minha Wallet</h1>
+        <p>Autorizações de Feira — FeirasWallet</p>
+    </header>
+    <nav>
+        <a href="/wallet/" class="active">Autorizações</a>
+    </nav>
+
+    <div class="container">
+        <div id="install-banner" style="display:none; background:#E8F5E9; border:1px solid #2E7D32; border-radius:10px; padding:14px 16px; margin-bottom:16px; font-size:0.85em; color:#1B5E20;">
+            📲 <strong>Instale este app no seu celular</strong> para acessar suas autorizações mesmo sem internet na feira.
+            <button onclick="installPWA()" id="install-btn" style="margin-left:10px; background:#2E7D32; color:white; border:none; border-radius:6px; padding:5px 12px; cursor:pointer; font-size:0.85em;">Instalar</button>
+            <button onclick="document.getElementById('install-banner').style.display='none'" style="margin-left:6px; background:none; border:none; color:#888; cursor:pointer; font-size:1em;">✕</button>
+        </div>
+
+        <div id="empty-state" style="display:none;">
+            <div class="icon">📭</div>
+            <h2>Nenhuma autorização ainda</h2>
+            <p>Abra o link de autorização recebido da associação para adicionar sua credencial de feira.</p>
+        </div>
+
+        <div id="credential-list" style="display:none;"></div>
+    </div>
+
+    <script src="/static/js/wallet.js"></script>
+    <script>
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-banner').style.display = 'block';
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    deferredPrompt = null;
+                    document.getElementById('install-banner').style.display = 'none';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', renderWalletHome);
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reivindicar Autorização - FeirasWallet</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .card { background: white; border-radius: 20px; padding: 40px 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .logo { text-align: center; font-size: 3em; margin-bottom: 8px; }
+        h1 { text-align: center; color: #333; font-size: 1.4em; margin-bottom: 4px; }
+        .subtitle { text-align: center; color: #888; font-size: 0.9em; margin-bottom: 32px; }
+        #status { text-align: center; color: #2E7D32; padding: 20px 0; }
+        #credential-content { display: none; }
+        .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.95em; }
+        .detail-row:last-of-type { border-bottom: none; }
+        .detail-label { color: #888; }
+        .detail-value { color: #333; font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
+        .issuer-badge { background: #E8F5E9; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-size: 0.75em; color: #2E7D32; text-align: center; word-break: break-all; }
+        .validity-box { background: #E8F5E9; border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: center; font-size: 0.85em; color: #2E7D32; font-weight: 600; }
+        .validity-box.expired { background: #f8d7da; color: #721c24; }
+        .btn-save { width: 100%; margin-top: 28px; padding: 16px; background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; border: none; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .btn-save:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46,125,50,0.4); }
+        .btn-save:disabled { background: #e0e0e0; color: #aaa; cursor: default; transform: none; }
+        .btn-saved { background: #28a745 !important; }
+        .wallet-link { display: block; text-align: center; margin-top: 16px; color: #2E7D32; text-decoration: none; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">🌾</div>
+        <h1>Autorização de Feira</h1>
+        <p class="subtitle">Emitida pela associação de agricultores</p>
+
+        <p id="status">Carregando autorização...</p>
+
+        <div id="credential-content">
+            <!-- Filled by wallet.js -->
+        </div>
+
+        <button class="btn-save" id="save-btn">💾 Salvar na minha wallet</button>
+        <a href="/wallet/" class="wallet-link">Ver minha wallet →</a>
+    </div>
+
+    <script src="/static/js/wallet.js"></script>
+    <script>
+        const claimId = "{{ claim_id }}";
+        document.addEventListener('DOMContentLoaded', () => loadClaimPage(claimId));
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js');
+        }
+    </script>
+</body>
+</html>

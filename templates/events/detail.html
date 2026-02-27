@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event.name }} - FeirasWallet</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; }
+        header { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.4em; }
+        nav a { color: white; text-decoration: none; margin-left: 24px; font-size: 0.9em; opacity: 0.85; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 32px 20px; }
+        .event-banner { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; border-radius: 16px; padding: 32px; margin-bottom: 24px; }
+        .event-banner h2 { font-size: 1.6em; margin-bottom: 8px; }
+        .event-meta { opacity: 0.85; font-size: 0.9em; }
+        .event-validity { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 12px 16px; margin-top: 16px; font-size: 0.85em; }
+        .section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .section h3 { color: #333; margin-bottom: 16px; font-size: 1em; }
+        .issue-form { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .btn { padding: 10px 24px; background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; border: none; border-radius: 8px; font-size: 0.9em; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn:hover { opacity: 0.9; }
+        .btn-outline { background: transparent; border: 2px solid #2E7D32; color: #2E7D32; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; font-size: 0.8em; color: #999; text-transform: uppercase; padding: 8px 12px; border-bottom: 1px solid #eee; }
+        td { padding: 12px; border-bottom: 1px solid #f5f5f5; font-size: 0.9em; vertical-align: middle; }
+        .badge-approved { background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 600; }
+        .badge-issued { background: #cce5ff; color: #004085; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 600; }
+        .badge-claimed { background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 600; }
+        input[type=text] { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; width: 60px; font-size: 0.85em; }
+        .flash { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .back { display: inline-block; margin-bottom: 20px; color: #2E7D32; text-decoration: none; font-size: 0.9em; }
+        .qr-link { color: #2E7D32; text-decoration: none; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌾 FeirasWallet</h1>
+        <nav>
+            <a href="/admin/">Dashboard</a>
+            <a href="/farmers/">Agricultores</a>
+            <a href="/events/">Eventos</a>
+            <a href="/admin/logout">Sair</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <a href="/events/" class="back">← Voltar para eventos</a>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="event-banner">
+            <h2>🏪 {{ event.name }}</h2>
+            <p class="event-meta">📍 {{ event.municipality }}, {{ event.state }} &nbsp;·&nbsp; 📅 {{ event.event_date }} &nbsp;·&nbsp; ⏰ {{ event.opening_time }}–{{ event.closing_time }}</p>
+            <div class="event-validity">
+                Credenciais válidas de <strong>{{ event.valid_from[:16] }}</strong> até <strong>{{ event.valid_until[:16] }}</strong>
+                &nbsp;(expiração automática após o evento)
+            </div>
+        </div>
+
+        <!-- Issue credentials form -->
+        <div class="section">
+            <h3>Emitir Credenciais para Agricultores Aprovados</h3>
+            <form method="POST" action="/events/{{ event.id }}/issue">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="check-all" onclick="toggleAll(this)"> Selecionar</th>
+                            <th>Agricultor</th>
+                            <th>Produtos nesta feira</th>
+                            <th>Nº Banca</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for farmer in farmers %}
+                        <tr>
+                            <td>
+                                {% if farmer.id not in issued_farmer_ids %}
+                                <input type="checkbox" name="farmer_ids" value="{{ farmer.id }}" checked>
+                                {% else %}
+                                <span style="color:#aaa">—</span>
+                                {% endif %}
+                            </td>
+                            <td><strong>{{ farmer.name }}</strong></td>
+                            <td>
+                                {% if farmer.id not in issued_farmer_ids %}
+                                <input type="text" name="products_{{ farmer.id }}"
+                                    value="{{ farmer.products | join(', ') if farmer.products else '' }}"
+                                    placeholder="Mel, Café" style="width:160px;font-size:0.82em">
+                                {% else %}
+                                <span style="color:#666;font-size:0.85em">{{ farmer.products | join(', ') if farmer.products else '—' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if farmer.id not in issued_farmer_ids %}
+                                <input type="text" name="stall_{{ farmer.id }}" placeholder="{{ loop.index }}" value="{{ loop.index }}">
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if farmer.id in issued_farmer_ids %}
+                                <span class="badge-issued">✓ Emitida</span>
+                                {% else %}
+                                <span class="badge-approved">Aprovado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <br>
+                {% if farmers %}
+                <button type="submit" class="btn">Emitir Credenciais Selecionadas</button>
+                {% else %}
+                <p style="color:#999;font-size:0.9em">Nenhum agricultor aprovado para emitir credenciais. <a href="/farmers/">Aprovar agricultores →</a></p>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Issued credentials -->
+        {% if issued_credentials %}
+        <div class="section">
+            <h3>Credenciais Emitidas ({{ issued_credentials|length }})</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Claim ID</th>
+                        <th>Banca</th>
+                        <th>Emitida em</th>
+                        <th>Status</th>
+                        <th>QR / Claim</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for cred in issued_credentials %}
+                    <tr>
+                        <td><code style="font-size:0.85em">{{ cred.claim_id }}</code></td>
+                        <td>{{ cred.stall_number or '—' }}</td>
+                        <td>{{ cred.issued_at[:16] if cred.issued_at else '—' }}</td>
+                        <td>
+                            {% if cred.claimed %}
+                            <span class="badge-claimed">✓ Reivindicada</span>
+                            {% else %}
+                            <span style="color:#888;font-size:0.85em">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/admin/qr/{{ cred.claim_id }}" class="qr-link">📷 QR</a>
+                            &nbsp;·&nbsp;
+                            <a href="/wallet/claim/{{ cred.claim_id }}" class="qr-link" target="_blank">🔗 Link</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleAll(source) {
+            document.querySelectorAll('input[name="farmer_ids"]').forEach(cb => cb.checked = source.checked);
+        }
+    </script>
+</body>
+</html>
