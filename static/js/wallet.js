@@ -200,7 +200,7 @@ async function loadClaimPage(claimId) {
                 saveBtn.classList.add('btn-saved');
             } else {
                 saveBtn.disabled = false;
-                saveBtn.onclick = () => saveToWallet(cred, saveBtn);
+                saveBtn.onclick = () => saveToWallet(cred, saveBtn, claimId);
             }
         }
 
@@ -213,7 +213,8 @@ async function loadClaimPage(claimId) {
     }
 }
 
-function saveToWallet(cred, btn) {
+function saveToWallet(cred, btn, claimId) {
+    if (claimId) cred._claimId = claimId;
     const added = addCredential(cred);
     if (btn) {
         btn.textContent = added ? '✓ Salvo na wallet!' : '✓ Já estava na wallet';
@@ -309,11 +310,16 @@ function generateQrCode(cred, btn) {
     box.innerHTML = '';
     box.style.display = 'flex';
 
+    // Prefer a short URL (easy to scan); fall back to full JSON for old credentials
+    const qrText = cred._claimId
+        ? window.location.origin + '/verify?claim=' + cred._claimId
+        : JSON.stringify(cred);
+
     try {
         var qr = qrcode(0, 'L');
-        qr.addData(JSON.stringify(cred));
+        qr.addData(qrText);
         qr.make();
-        box.innerHTML = qr.createSvgTag(4, 0);
+        box.innerHTML = qr.createSvgTag(6, 2);
         var svg = box.querySelector('svg');
         if (svg) { svg.style.borderRadius = '8px'; svg.style.maxWidth = '100%'; }
         if (btn) { btn.textContent = '✕ Ocultar QR Code'; btn.classList.add('open'); }
