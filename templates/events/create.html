@@ -111,6 +111,18 @@
             document.getElementById('valid_from').value = prevStr + 'T18:00';
             document.getElementById('valid_until').value = d + 'T15:00';
         });
+
+        // Before submitting, append BRT offset (-03:00) to datetime-local fields
+        // so Supabase timestamptz stores the correct UTC value (Brazil time, not UTC)
+        document.querySelector('form').addEventListener('submit', function () {
+            ['valid_from', 'valid_until'].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el && el.value && !el.value.includes('+') && !el.value.includes('Z')) {
+                    const v = el.value.length === 16 ? el.value + ':00' : el.value;
+                    el.value = v + '-03:00';
+                }
+            });
+        });
     </script>
 </body>
 </html>
