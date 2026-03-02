@@ -13,6 +13,15 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from routes.admin_routes import require_admin
 
+
+def _add_brt_offset(value: str) -> str:
+    """Append Brazil UTC-3 offset to a naive datetime-local string (YYYY-MM-DDTHH:MM)."""
+    if not value or '+' in value or value.endswith('Z'):
+        return value
+    if len(value) == 16:   # "YYYY-MM-DDTHH:MM" — add seconds
+        value += ':00'
+    return value + '-03:00'
+
 feira_bp = Blueprint('events', __name__, url_prefix='/events')
 
 
@@ -43,8 +52,8 @@ def create():
         state = request.form.get('state', '').strip()
         opening_time = request.form.get('opening_time', '06:00').strip()
         closing_time = request.form.get('closing_time', '14:00').strip()
-        valid_from = request.form.get('valid_from', '').strip()
-        valid_until = request.form.get('valid_until', '').strip()
+        valid_from = _add_brt_offset(request.form.get('valid_from', '').strip())
+        valid_until = _add_brt_offset(request.form.get('valid_until', '').strip())
 
         if not all([name, event_date, municipality, state, valid_from, valid_until]):
             flash('Preencha todos os campos obrigatórios', 'error')
