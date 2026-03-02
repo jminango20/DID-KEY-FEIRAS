@@ -284,6 +284,42 @@ function loadViewPage() {
                 .catch(() => { copyBtn.textContent = 'Erro'; });
         };
     }
+
+    // QR code button
+    const qrBtn = document.getElementById('qr-btn');
+    if (qrBtn) {
+        qrBtn.onclick = () => generateQrCode(cred, qrBtn);
+    }
+}
+
+// ── QR Code ──────────────────────────────────────────────────────────────────
+
+function generateQrCode(cred, btn) {
+    const box = document.getElementById('qr-box');
+    if (!box) return;
+
+    // Toggle off if already visible
+    if (box.style.display === 'flex') {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        if (btn) { btn.textContent = '📷 Mostrar QR Code'; btn.classList.remove('open'); }
+        return;
+    }
+
+    box.innerHTML = '';
+    box.style.display = 'flex';
+
+    try {
+        new QRCode(box, {
+            text: JSON.stringify(cred),
+            width: 260,
+            height: 260,
+            correctLevel: QRCode.CorrectLevel.L
+        });
+        if (btn) { btn.textContent = '✕ Ocultar QR Code'; btn.classList.add('open'); }
+    } catch (_) {
+        box.innerHTML = '<p style="color:#c00;font-size:0.85em;text-align:center">Credencial muito grande para gerar QR code.</p>';
+    }
 }
 
 function setText(id, value) {
