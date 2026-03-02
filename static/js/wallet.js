@@ -309,17 +309,20 @@ function generateQrCode(cred, btn) {
     box.innerHTML = '';
     box.style.display = 'flex';
 
-    try {
-        new QRCode(box, {
-            text: JSON.stringify(cred),
-            width: 260,
-            height: 260,
-            correctLevel: QRCode.CorrectLevel.L
-        });
+    const canvas = document.createElement('canvas');
+    box.appendChild(canvas);
+
+    QRCode.toCanvas(canvas, JSON.stringify(cred), {
+        errorCorrectionLevel: 'L',
+        width: 260,
+        margin: 2
+    }, function (err) {
+        if (err) {
+            box.innerHTML = '<p style="color:#c00;font-size:0.85em;text-align:center">Erro ao gerar QR code: ' + err.message + '</p>';
+            return;
+        }
         if (btn) { btn.textContent = '✕ Ocultar QR Code'; btn.classList.add('open'); }
-    } catch (_) {
-        box.innerHTML = '<p style="color:#c00;font-size:0.85em;text-align:center">Credencial muito grande para gerar QR code.</p>';
-    }
+    });
 }
 
 function setText(id, value) {
