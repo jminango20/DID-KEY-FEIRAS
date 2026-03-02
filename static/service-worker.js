@@ -2,11 +2,12 @@
 // Caches static assets and wallet pages for offline use.
 // Credentials are stored in localStorage — offline-first by design.
 
-const CACHE_NAME = 'feiras-wallet-v1';
+const CACHE_NAME = 'feiras-wallet-v2';
 
 const PRECACHE_URLS = [
     '/wallet/',
     '/static/js/wallet.js',
+    '/static/js/qrcode.min.js',
     '/static/manifest.json',
 ];
 

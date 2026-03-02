@@ -309,20 +309,17 @@ function generateQrCode(cred, btn) {
     box.innerHTML = '';
     box.style.display = 'flex';
 
-    const canvas = document.createElement('canvas');
-    box.appendChild(canvas);
-
-    QRCode.toCanvas(canvas, JSON.stringify(cred), {
-        errorCorrectionLevel: 'L',
-        width: 260,
-        margin: 2
-    }, function (err) {
-        if (err) {
-            box.innerHTML = '<p style="color:#c00;font-size:0.85em;text-align:center">Erro ao gerar QR code: ' + err.message + '</p>';
-            return;
-        }
+    try {
+        var qr = qrcode(0, 'L');
+        qr.addData(JSON.stringify(cred));
+        qr.make();
+        box.innerHTML = qr.createSvgTag(4, 0);
+        var svg = box.querySelector('svg');
+        if (svg) { svg.style.borderRadius = '8px'; svg.style.maxWidth = '100%'; }
         if (btn) { btn.textContent = '✕ Ocultar QR Code'; btn.classList.add('open'); }
-    });
+    } catch (err) {
+        box.innerHTML = '<p style="color:#c00;font-size:0.85em;text-align:center">Erro ao gerar QR code: ' + err.message + '</p>';
+    }
 }
 
 function setText(id, value) {
