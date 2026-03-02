@@ -33,6 +33,10 @@
         .badge-valid { background: #d4edda; color: #155724; }
         .badge-expired { background: #f8d7da; color: #721c24; }
         .credential-badges { padding: 8px 0; }
+        .btn-scan-claim { width: 100%; padding: 14px; background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; border: none; border-radius: 10px; font-size: 1em; font-weight: 600; cursor: pointer; margin-bottom: 16px; }
+        .btn-scan-claim:hover { background: #1B5E20; }
+        #claim-scanner-container { display: none; border-radius: 10px; overflow: hidden; border: 2px solid #2E7D32; margin-bottom: 10px; }
+        #claim-stop-btn { display: none; width: 100%; padding: 10px; margin-bottom: 16px; background: #f8d7da; color: #721c24; border: none; border-radius: 8px; font-size: 0.9em; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -51,18 +55,56 @@
             <button onclick="document.getElementById('install-banner').style.display='none'" style="margin-left:6px; background:none; border:none; color:#888; cursor:pointer; font-size:1em;">✕</button>
         </div>
 
+        <button class="btn-scan-claim" onclick="startClaimScanner()">📷 Escanear autorização</button>
+        <div id="claim-scanner-container"><div id="claim-scanner"></div></div>
+        <button id="claim-stop-btn" onclick="stopClaimScanner()">✕ Cancelar</button>
+
         <div id="empty-state" style="display:none;">
             <div class="icon">📭</div>
             <h2>Nenhuma autorização ainda</h2>
-            <p>Abra o link de autorização recebido da associação para adicionar sua credencial de feira.</p>
+            <p>Escaneie o QR code recebido da associação para adicionar sua credencial de feira.</p>
         </div>
 
         <div id="credential-list" style="display:none;"></div>
     </div>
 
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="/static/js/wallet.js"></script>
     <script>
         let deferredPrompt = null;
+        let claimScanner = null;
+
+        async function startClaimScanner() {
+            const container = document.getElementById('claim-scanner-container');
+            const stopBtn = document.getElementById('claim-stop-btn');
+            container.style.display = 'block';
+            stopBtn.style.display = 'block';
+
+            claimScanner = new Html5Qrcode('claim-scanner');
+            try {
+                await claimScanner.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 260, height: 260 } },
+                    (decodedText) => {
+                        stopClaimScanner();
+                        window.location.href = decodedText;
+                    },
+                    (_) => {}
+                );
+            } catch (err) {
+                stopClaimScanner();
+                alert('Não foi possível acessar a câmera: ' + err);
+            }
+        }
+
+        async function stopClaimScanner() {
+            if (claimScanner) {
+                try { await claimScanner.stop(); } catch (_) {}
+                claimScanner = null;
+            }
+            document.getElementById('claim-scanner-container').style.display = 'none';
+            document.getElementById('claim-stop-btn').style.display = 'none';
+        }
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
